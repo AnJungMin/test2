@@ -6,8 +6,8 @@ from app.core.transform import transform  # transform은 이미지 전처리
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model(weight_path: str):
-    model = MultiTaskMobileViT(use_pretrained_backbone=True)  # ✅ MobileViT 기반
-    state = torch.load(weight_path, map_location=DEVICE)  # ❌ weights_only 제거
+    model = MultiTaskMobileViT(use_pretrained_backbone=True)  # True로 설정해야 pretrained 모델 로드
+    state = torch.load(weight_path, map_location=DEVICE, weights_only=True)  # ✅ weights_only=True 설정
     model.load_state_dict(state["model_params"])
     model.to(DEVICE)
     model.eval()
