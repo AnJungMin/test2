@@ -6,8 +6,8 @@ from app.model.inference import load_model, predict
 
 router = APIRouter()
 
-# ✅ 정확한 경로로 수정!
-model = load_model("app/model_weight/MobileVit-XXS_model_SCALP_2025_03_31_15.pt")
+# ✅ 정확한 경로
+model = load_model("model_weight/MobileVit-XXS_model_SCALP_2025_03_31_15.pt")
 
 @router.post("/predict")
 async def predict_disease(file: UploadFile = File(...)):
