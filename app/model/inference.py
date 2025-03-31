@@ -7,7 +7,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model(weight_path: str):
     model = MultiTaskMobileViT(use_pretrained_backbone=True)
-    state = torch.load(weight_path, map_location=DEVICE)
+    
+    # ✅ PyTorch 2.6 이상 대응 (기본값 weights_only=True → False로 명시)
+    state = torch.load(weight_path, map_location=DEVICE, weights_only=False)
+
     model.load_state_dict(state["model_params"])
     model.to(DEVICE)
     model.eval()
