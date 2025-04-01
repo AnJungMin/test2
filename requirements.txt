@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+torch==2.6.0
+torchvision
+transformers
+Pillow
+python-multipart
+tqdm
+matplotlib
+seaborn
+torchinfo
+numpy
