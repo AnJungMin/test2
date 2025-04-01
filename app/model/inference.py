@@ -2,12 +2,16 @@ import torch
 from app.model.model import MultiTaskMobileViT
 from app.core.transform import transform  # transform은 이미지 전처리
 from PIL import Image
+from torch.optim import Adam
+
+# Adam 옵티마이저 클래스를 안전하게 로드할 수 있도록 설정
+torch.serialization.add_safe_globals([Adam])
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model(weight_path: str):
     model = MultiTaskMobileViT(use_pretrained_backbone=True)  # True로 설정하여 pretrained 모델 로드
-    state = torch.load(weight_path, map_location=DEVICE)  # weights_only 파라미터 제거
+    state = torch.load(weight_path, map_location=DEVICE, weights_only=True)  # weights_only=True로 설정하여 상태만 로드
     model.load_state_dict(state["model_params"])  # 모델 파라미터만 로드
     model.to(DEVICE)
     model.eval()
