@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from transformers import MobileViTForImageClassification
 
-# DEVICE 정의 (외부 의존성 제거)
+# DEVICE를 내부에서 정의 (외부 config에 의존하지 않음)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # MobileViT 백본
@@ -26,7 +26,7 @@ class MobileViTBackbone(nn.Module):
         features = outputs.hidden_states[-1]
         return features
 
-# Inverted Bottleneck Block
+# Inverted Bottleneck Block (MobileNetV2 참고)
 class InvertedBottleneckBlock(nn.Module):
     def __init__(self, in_channels, out_channels, expansion_factor=6, stride=1):
         super(InvertedBottleneckBlock, self).__init__()
@@ -82,7 +82,7 @@ class MultiTaskMobileViT(nn.Module):
             self.fc_talmo(features),
         )
 
-# 테스트 실행
+# 테스트 실행 (직접 실행할 때)
 if __name__ == '__main__':
     model = MultiTaskMobileViT(head_channels=64).to(DEVICE)
     input_tensor = torch.randn(1, 3, 224, 224).to(DEVICE)
