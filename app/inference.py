@@ -25,11 +25,7 @@ def load_model():
     return model
 
 def predict_image(image=None, image_path=None, model=None):
-    """
-    image: PIL.Image 객체 또는
-    image_path: 이미지 파일 경로 (둘 중 하나 제공)
-    model: 미리 로드된 모델 (없으면 load_model() 호출)
-    """
+   
     if image is None and image_path is not None:
         image = Image.open(image_path).convert("RGB")
     image = data_transforms(image).unsqueeze(0).to(DEVICE)
