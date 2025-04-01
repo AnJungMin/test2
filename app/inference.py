@@ -4,11 +4,7 @@ import torch
 from torchvision import transforms
 from PIL import Image
 from app.model.model import MultiTaskMobileViT  # app/model/model.py에서 가져옴
-<<<<<<< HEAD
 from app.train.config import DEVICE            # app/train/config.py에서 DEVICE 가져옴
-=======
-from app.train.config import DEVICE            # 수정: app/train/config.py에서 DEVICE 가져옴
->>>>>>> b6ad3b1164710d114d92e0592a5c3eec4d61a5bc
 
 # 학습된 모델 weight 경로 (app/model_weight 폴더 내의 모델 파일)
 MODEL_PATH = os.path.join("app", "model_weight", "MobileVit-XXS_2025_04_01_14_model.pt")
@@ -22,26 +18,18 @@ data_transforms = transforms.Compose([
 
 def load_model():
     model = MultiTaskMobileViT(head_channels=64).to(DEVICE)
-<<<<<<< HEAD
-    # weights_only=False 옵션을 추가하여 체크포인트 로드
+    # weights_only 옵션을 사용하여 체크포인트 로드 (신뢰할 수 있는 파일인 경우)
     checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
-=======
-    checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
->>>>>>> b6ad3b1164710d114d92e0592a5c3eec4d61a5bc
     model.load_state_dict(checkpoint['model_params'])
     model.eval()
     return model
 
 def predict_image(image=None, image_path=None, model=None):
-<<<<<<< HEAD
-   
-=======
     """
     image: PIL.Image 객체 또는
     image_path: 이미지 파일 경로 (둘 중 하나 제공)
     model: 미리 로드된 모델 (없으면 load_model() 호출)
     """
->>>>>>> b6ad3b1164710d114d92e0592a5c3eec4d61a5bc
     if image is None and image_path is not None:
         image = Image.open(image_path).convert("RGB")
     image = data_transforms(image).unsqueeze(0).to(DEVICE)
@@ -49,13 +37,3 @@ def predict_image(image=None, image_path=None, model=None):
         outputs = model(image)
     predictions = [head.argmax(dim=1).item() for head in outputs]
     return predictions
-<<<<<<< HEAD
-=======
-
-# 개별 실행 테스트
-if __name__ == '__main__':
-    test_img = r"C:\Users\안정민\Desktop\MTL2\data\image\sample.jpg"  # 테스트 이미지 경로 (예시)
-    model = load_model()
-    preds = predict_image(image_path=test_img, model=model)
-    print("Predictions:", preds)
->>>>>>> b6ad3b1164710d114d92e0592a5c3eec4d61a5bc
