@@ -2,10 +2,10 @@ import torch
 from app.model.model import MultiTaskMobileViT
 from app.core.transform import transform  # transform은 이미지 전처리
 from PIL import Image
-from torch.optim import Adam
+from collections import defaultdict  # defaultdict 추가
 
-# Adam 옵티마이저 클래스를 안전하게 로드할 수 있도록 설정
-torch.serialization.add_safe_globals([Adam])
+# defaultdict를 안전하게 로드할 수 있도록 설정
+torch.serialization.add_safe_globals([defaultdict])
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
