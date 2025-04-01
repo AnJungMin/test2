@@ -3,8 +3,8 @@ import os
 import torch
 from torchvision import transforms
 from PIL import Image
-from app.model.model import MultiTaskMobileViT  # 수정: app/model/model.py 경로 사용
-from train.config import DEVICE
+from app.model.model import MultiTaskMobileViT  # app/model/model.py에서 가져옴
+from app.train.config import DEVICE            # 수정: app/train/config.py에서 DEVICE 가져옴
 
 # 학습된 모델 weight 경로 (app/model_weight 폴더 내의 모델 파일)
 MODEL_PATH = os.path.join("app", "model_weight", "MobileVit-XXS_2025_04_01_14_model.pt")
@@ -27,7 +27,7 @@ def predict_image(image=None, image_path=None, model=None):
     """
     image: PIL.Image 객체 또는
     image_path: 이미지 파일 경로 (둘 중 하나 제공)
-    model: 미리 로드된 모델 (없으면 load_model()을 호출)
+    model: 미리 로드된 모델 (없으면 load_model() 호출)
     """
     if image is None and image_path is not None:
         image = Image.open(image_path).convert("RGB")

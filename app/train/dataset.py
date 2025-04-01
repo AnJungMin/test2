@@ -6,7 +6,7 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset, random_split, DataLoader
 from torchvision import transforms
-from train.config import TRAIN_RATIO, BATCH_SIZE
+from app.train.config import TRAIN_RATIO, BATCH_SIZE  # 수정된 경로
 
 class MultiTaskDataset(Dataset):
     def __init__(self, img_dir, json_dir, transform=None):
