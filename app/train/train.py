@@ -1,114 +1,162 @@
+# train/train.py
 import time
 import torch
-from torch import optim
-from torch.utils.data import DataLoader, random_split
-from torchvision import transforms
+import torch.optim as optim
+from torch.optim.lr_scheduler import StepLR
+from tqdm import tqdm
+from train.config import DEVICE
+from train.loss import get_criterion_list
 
-from train.dataset import MultiTaskDataset
-from train.loss import FocalLoss
-from train.config import *
-
-from app.model.model import MultiTaskMobileViT
-
-# ----------------------------
-# 전처리 구성
-# ----------------------------
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-])
-
-# ----------------------------
-# 데이터셋 로딩
-# ----------------------------
-total_ds = MultiTaskDataset(IMAGE_PATH, LABEL_PATH, transform)
-n_train = int(len(total_ds) * TRAIN_RATIO)
-n_val = int(len(total_ds) * 0.1)
-n_test = len(total_ds) - n_train - n_val
-
-train_ds, val_ds, test_ds = random_split(total_ds, [n_train, n_val, n_test])
-train_dl = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
-val_dl = DataLoader(val_ds, batch_size=BATCH_SIZE)
-
-# ----------------------------
-# 모델 및 손실함수
-# ----------------------------
-model = MultiTaskMobileViT(use_pretrained_backbone=True).to(DEVICE)
-optimizer = optim.Adam(model.parameters(), lr=LR)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=LR_STEP, gamma=LR_GAMMA)
-
-criterion_list = [FocalLoss(alpha=0.25, gamma=2.0).to(DEVICE) for _ in range(6)]
-
-# ----------------------------
-# 에폭별 손실/정확도 기록용
-# ----------------------------
 def loss_epoch(model, dataloader, criterion_list, optimizer=None):
-    model.train() if optimizer else model.eval()
-
-    epoch_loss, correct = 0, 0
-    task_loss = [0.0] * 6
+    epoch_loss = 0.0
+    epoch_loss_components = [0.0] * 6  # 각 태스크별 손실 저장
     task_correct = [0] * 6
-    total = len(dataloader.dataset)
-
-    for x_batch, y_batch in dataloader:
-        x_batch, y_batch = x_batch.to(DEVICE), y_batch.to(DEVICE)
-
+    total_correct = 0
+    num_data = len(dataloader.dataset)
+    
+    c_mise, c_pizi, c_mosa, c_mono, c_biddem, c_talmo = criterion_list
+    
+    for x_batch, y_batch in tqdm(dataloader, leave=False):
+        x_batch = x_batch.to(DEVICE)
+        y_batch = y_batch.to(DEVICE)
+        
         outputs = model(x_batch)
-
-        losses = [criterion(outputs[i], y_batch[:, i]) for i, criterion in enumerate(criterion_list)]
-        total_loss = sum(losses)
-
-        if optimizer:
+        loss_values = [
+            c_mise(outputs[0], y_batch[:, 0]),
+            c_pizi(outputs[1], y_batch[:, 1]),
+            c_mosa(outputs[2], y_batch[:, 2]),
+            c_mono(outputs[3], y_batch[:, 3]),
+            c_biddem(outputs[4], y_batch[:, 4]),
+            c_talmo(outputs[5], y_batch[:, 5]),
+        ]
+        loss = sum(loss_values)
+        
+        if optimizer is not None:
             optimizer.zero_grad()
-            total_loss.backward()
+            loss.backward()
             optimizer.step()
+        
+        batch_size = x_batch.shape[0]
+        epoch_loss += loss.item() * batch_size
+        for i, lv in enumerate(loss_values):
+            epoch_loss_components[i] += lv.item() * batch_size
+        
+        preds = torch.stack([o.argmax(dim=1) for o in outputs], dim=1)
+        for task in range(6):
+            correct = (preds[:, task] == y_batch[:, task]).sum().item()
+            task_correct[task] += correct
+            total_correct += correct
+            
+    epoch_loss /= num_data
+    epoch_acc = total_correct / (num_data * 6) * 100
+    task_acc = [(c / num_data) * 100 for c in task_correct]
+    
+    return epoch_loss, *epoch_loss_components, epoch_acc, task_acc
 
-        epoch_loss += total_loss.item() * x_batch.size(0)
-        for i in range(6):
-            task_loss[i] += losses[i].item() * x_batch.size(0)
-            preds = torch.argmax(outputs[i], dim=1)
-            task_correct[i] += (preds == y_batch[:, i]).sum().item()
-
-    avg_loss = epoch_loss / total
-    avg_task_loss = [tl / total for tl in task_loss]
-    avg_acc = sum(task_correct) / (total * 6) * 100
-    avg_task_acc = [tc / total * 100 for tc in task_correct]
-
-    return avg_loss, avg_task_loss, avg_acc, avg_task_acc
-
-# ----------------------------
-# 전체 학습 루프
-# ----------------------------
-def Train():
-    best_val_loss = float('inf')
-
-    for epoch in range(1, EPOCHS + 1):
+def Train(model, train_DL, val_DL, criterion_list, optimizer, EPOCH, save_model_path, save_history_path, **kwargs):
+    scheduler = StepLR(optimizer, step_size=kwargs.get('LR_STEP', 3), gamma=kwargs.get('LR_GAMMA', 0.9)) if 'LR_STEP' in kwargs else None
+    
+    loss_history = {
+        'train': {'total': [], 'mise': [], 'pizi': [], 'mosa': [], 'mono': [], 'biddem': [], 'talmo': []},
+        'val': {'total': [], 'mise': [], 'pizi': [], 'mosa': [], 'mono': [], 'biddem': [], 'talmo': []}
+    }
+    acc_history = {
+        'train': {'total': [], 'mise': [], 'pizi': [], 'mosa': [], 'mono': [], 'biddem': [], 'talmo': []},
+        'val': {'total': [], 'mise': [], 'pizi': [], 'mosa': [], 'mono': [], 'biddem': [], 'talmo': []}
+    }
+    
+    best_loss = float('inf')
+    
+    for epoch in range(EPOCH):
         start_time = time.time()
-        current_lr = optimizer.param_groups[0]["lr"]
-
-        print(f"[Epoch {epoch}/{EPOCHS}] LR: {current_lr}")
-
-        train_loss, train_task_loss, train_acc, train_task_acc = loss_epoch(model, train_dl, criterion_list, optimizer)
-        val_loss, val_task_loss, val_acc, val_task_acc = loss_epoch(model, val_dl, criterion_list)
-
-        scheduler.step()
-
-        print(f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-        print(f"Train Acc: {train_acc:.2f}% | Val Acc: {val_acc:.2f}%")
-        print(f"Time: {round(time.time() - start_time)}s\n{'-'*50}")
-
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
+        current_lr = optimizer.param_groups[0]['lr']
+        print(f"Epoch: {epoch+1}/{EPOCH}, current_LR = {current_lr}")
+        
+        # 학습 단계
+        train_results = loss_epoch(model, train_DL, criterion_list, optimizer)
+        train_loss, *train_loss_components, train_acc, train_task_acc = train_results
+        
+        loss_history['train']['total'].append(train_loss)
+        loss_history['train']['mise'].append(train_loss_components[0])
+        loss_history['train']['pizi'].append(train_loss_components[1])
+        loss_history['train']['mosa'].append(train_loss_components[2])
+        loss_history['train']['mono'].append(train_loss_components[3])
+        loss_history['train']['biddem'].append(train_loss_components[4])
+        loss_history['train']['talmo'].append(train_loss_components[5])
+        
+        acc_history['train']['total'].append(train_acc)
+        acc_history['train']['mise'].append(train_task_acc[0])
+        acc_history['train']['pizi'].append(train_task_acc[1])
+        acc_history['train']['mosa'].append(train_task_acc[2])
+        acc_history['train']['mono'].append(train_task_acc[3])
+        acc_history['train']['biddem'].append(train_task_acc[4])
+        acc_history['train']['talmo'].append(train_task_acc[5])
+        
+        # 검증 단계
+        model.eval()
+        with torch.no_grad():
+            val_results = loss_epoch(model, val_DL, criterion_list)
+        val_loss, *val_loss_components, val_acc, val_task_acc = val_results
+        
+        loss_history['val']['total'].append(val_loss)
+        loss_history['val']['mise'].append(val_loss_components[0])
+        loss_history['val']['pizi'].append(val_loss_components[1])
+        loss_history['val']['mosa'].append(val_loss_components[2])
+        loss_history['val']['mono'].append(val_loss_components[3])
+        loss_history['val']['biddem'].append(val_loss_components[4])
+        loss_history['val']['talmo'].append(val_loss_components[5])
+        
+        acc_history['val']['total'].append(val_acc)
+        acc_history['val']['mise'].append(val_task_acc[0])
+        acc_history['val']['pizi'].append(val_task_acc[1])
+        acc_history['val']['mosa'].append(val_task_acc[2])
+        acc_history['val']['mono'].append(val_task_acc[3])
+        acc_history['val']['biddem'].append(val_task_acc[4])
+        acc_history['val']['talmo'].append(val_task_acc[5])
+        
+        if val_loss < best_loss:
+            best_loss = val_loss
             torch.save({
-                "model_params": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "epoch": epoch
-            }, SAVE_MODEL_PATH)
-            print("✅ Model saved!")
+                'model_params': model.state_dict(),
+                'epoch': epoch + 1,
+                'optimizer': optimizer,
+                'scheduler': scheduler
+            }, save_model_path)
+            print('Model saved!')
+        
+        if scheduler is not None:
+            scheduler.step()
+        
+        print(f"Train loss: {round(train_loss,5)}, Val loss: {round(val_loss,5)}")
+        print(f"Train acc: {round(train_acc,1)}%, Val acc: {round(val_acc,1)}%, Time: {round(time.time()-start_time)} s")
+        print("-"*20)
+        
+        model.train()
+        
+    torch.save({
+        "loss_history": loss_history,
+        "acc_history": acc_history,
+        "EPOCH": EPOCH,
+        "BATCH_SIZE": BATCH_SIZE,
+        "TRAIN_RATIO": TRAIN_RATIO,
+    }, save_history_path)
+        
+    return loss_history, acc_history
 
-# ----------------------------
-# 실행
-# ----------------------------
-if __name__ == "__main__":
-    Train()
+if __name__ == '__main__':
+    from train.config import DEVICE, EPOCH, BATCH_SIZE, SAVE_MODEL_PATH, SAVE_HISTORY_PATH, LR, LR_STEP, LR_GAMMA, TRAIN_RATIO
+    from train.dataset import get_dataloaders
+    from train.loss import get_criterion_list
+    from model.model import MultiTaskMobileViT
+    import torch.optim as optim
+
+    # 데이터 경로 (환경에 맞게 수정)
+    image_path = r"C:\Users\안정민\Desktop\MTL2\data\image"
+    label_path = r"C:\Users\안정민\Desktop\MTL2\data\label"
+    train_DL, val_DL, test_DL = get_dataloaders(image_path, label_path)
+    
+    model = MultiTaskMobileViT(head_channels=64).to(DEVICE)
+    criterion_list = get_criterion_list(DEVICE)
+    optimizer = optim.Adam(model.parameters(), lr=LR)
+    
+    Train(model, train_DL, val_DL, criterion_list, optimizer, EPOCH, SAVE_MODEL_PATH, SAVE_HISTORY_PATH, LR_STEP=LR_STEP, LR_GAMMA=LR_GAMMA)

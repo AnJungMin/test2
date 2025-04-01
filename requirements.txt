@@ -5,3 +5,8 @@ torchvision
 transformers
 Pillow
 python-multipart
+tqdm
+matplotlib
+seaborn
+torchinfo
+numpy
