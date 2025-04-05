@@ -1,0 +1,122 @@
+{
+    "미세각질": [
+        {
+            "recommended_product_index": 466,
+            "product_name": "커리쉴 리바이탈라이징 솔트 스크럽 샴푸 300ml",
+            "category": "샴푸/린스",
+            "similarity": 0.795025098323822
+        },
+        {
+            "recommended_product_index": 102,
+            "product_name": "TS BD샴푸 500g",
+            "category": "샴푸/린스",
+            "similarity": 0.6936286211013794
+        },
+        {
+            "recommended_product_index": 288,
+            "product_name": "에센허브 티트리 딥클린 스칼프 샴푸 500ml",
+            "category": "샴푸/린스",
+            "similarity": 0.6885828495025635
+        }
+    ],
+    "피지과다": [
+        {
+            "recommended_product_index": 392,
+            "product_name": "위드비컨 탈모증상완화 노모어오일 샴푸 360ml(지성 두피)",
+            "category": "샴푸/린스",
+            "similarity": 0.70889657139778137
+        },
+        {
+            "recommended_product_index": 55,
+            "product_name": "[솔로지옥 배지연PICK] 모에브 아누카틴 샴푸 300ml",
+            "category": "샴푸/린스",
+            "similarity": 0.6950679063796997
+        },
+        {
+            "recommended_product_index": 219,
+            "product_name": "닥터시드 블랙빈 안티헤어로스 샴푸 1000ml (탈모증상완화)",
+            "category": "샴푸/린스",
+            "similarity": 0.6935985326766968
+        }
+    ],
+    "모낭사이홍반": [
+        {
+            "recommended_product_index": 1252,
+            "product_name": "[NEW/OY단독]에브리톡톡 헤어토닉 120ml",
+            "category": "헤어에센스",
+            "similarity": 0.73231309056282043
+        },
+        {
+            "recommended_product_index": 1079,
+            "product_name": "얼라이브랩 오투 스칼프 앰플 25ml*2",
+            "category": "헤어에센스",
+            "similarity": 0.6853371798992157
+        },
+        {
+            "recommended_product_index": 1115,
+            "product_name": "달리프 쿨링 헤어토닉 와사비베어 단독기획(100ml+50ml+거울키링증정)",
+            "category": "헤어에센스",
+            "similarity": 0.55512754917144775
+        }
+    ],
+    "모낭홍반/농포": [
+        {
+            "recommended_product_index": 392,
+            "product_name": "위드비컨 탈모증상완화 노모어오일 샴푸 360ml(지성 두피)",
+            "category": "샴푸/린스",
+            "similarity": 0.6905959725379944
+        },
+        {
+            "recommended_product_index": 81,
+            "product_name": "[남성특화] 려 루트젠 남성맞춤 탈모증상전문케어 샴푸 353ml",
+            "category": "샴푸/린스",
+            "similarity": 0.5555641174316406
+        },
+        {
+            "recommended_product_index": 31,
+            "product_name": "[각질/쿨링/가려움]닥터지 두피랩 쿨 솔트 스케일링 샴푸 500g",
+            "category": "샴푸/린스",
+            "similarity": 0.6437536656856537
+        }
+    ],
+    "비듬": [
+        {
+            "recommended_product_index": 37,
+            "product_name": "모에브 아누카틴 샴푸/트리트먼트/헤어에센스 3종 택 1",
+            "category": "샴푸/린스",
+            "similarity": 0.74311622381210327
+        },
+        {
+            "recommended_product_index": 235,
+            "product_name": "로픈 바오밥 21차 안티 오일리 프리미엄 샴푸1000g",
+            "category": "샴푸/린스",
+            "similarity": 0.63928120136260986
+        },
+        {
+            "recommended_product_index": 183,
+            "product_name": "TS 프리미엄 샴푸 (본품500g+140g+6gx10매 추가 증정)",
+            "category": "샴푸/린스",
+            "similarity": 0.5760721743106842
+        }
+    ],
+    "탈모": [
+        {
+            "recommended_product_index": 999,
+            "product_name": "[기은세 유튜브 두피앰플/화해1위] 솔랩 탈모/진정 두피앰플+샴푸증정기획",
+            "category": "헤어에센스",
+            "similarity": 0.7554003357887268
+        },
+        {
+            "recommended_product_index": 1252,
+            "product_name": "[NEW/OY단독]에브리톡톡 헤어토닉 120ml",
+            "category": "헤어에센스",
+            "similarity": 0.6490448117256165
+        },
+        {
+            "recommended_product_index": 585,
+            "product_name": "[대용량/스케일링]닥터방기원 샴푸 바이오틴 탈모케어 [모근 강화]",
+            "category": "샴푸/린스",
+            "similarity": 0.645471453666687
+        }
+    ]
+}
