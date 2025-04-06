@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 torch==2.6.0
 torchvision
-transformers>=4.38.0
+transformers==4.39.3
 Pillow
 python-multipart
 tqdm
